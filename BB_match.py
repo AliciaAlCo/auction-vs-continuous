@@ -17,12 +17,6 @@ import sys
 
 #%% Testing inputs
 
-#Setpoint = pd.read_excel(open('Setpoint_nodes.xlsx', 'rb'),sheet_name='Nodes_15',index_col=0) # Baseline injections at each nodes (negative for retrieval)
-
-# # Initial Social Welfare and Flexibility Procurement Cost
-# Social_Welfare = 0
-# Flex_procurement = 0
-
 # Index for nodes
 bus = pd.read_excel(open('network33bus.xlsx','rb'),sheet_name='Bus',index_col=0)
 nodes = list(bus.index)
@@ -30,15 +24,6 @@ nodes = list(bus.index)
 # Index for branches
 branch= pd.read_excel(open('network33bus.xlsx','rb'),sheet_name='Branch',index_col=0)
 lines = list(branch.index)
-
-# Setpoint = Setpoint.loc['t1']
-# orderbook_temporary = pd.read_excel(open('orderbook_temporary_test.xlsx', 'rb'),sheet_name='Test_4',index_col=0) 
-# offer_index = 'o10d1'
-# offer_quantity = 0.03
-# direction ='Down'
-# offer_bus = 'n10'
-# offer_price = 30
-# offer_block = 1
 
 #%%
 
@@ -207,7 +192,7 @@ def BB_match(setpoint,orderbook_temporary,offer_index,offer_quantity, lines, nod
         print ('Check feasibility')
         slack = 0
         for L in m.L:
-            print (m.slack[L].value)
+            #print (m.slack[L].value)
             slack += m.slack[L].value
         
         if slack < epsilon:
@@ -220,7 +205,6 @@ def BB_match(setpoint,orderbook_temporary,offer_index,offer_quantity, lines, nod
                     continue
                 elif m.pru[RU].value > epsilon:
                     a = orderbook_temporary[orderbook_temporary['Request']==RU]
-                    print (a)
                     # Define matching price according to the arrival order
                     if a.iloc[-1,8] < a.iloc[-1,4]:
                         matching_price = a.iloc[-1,7]
@@ -251,21 +235,16 @@ def BB_match(setpoint,orderbook_temporary,offer_index,offer_quantity, lines, nod
         
         
         # checking that the optimization problem works properly
-        if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
-            print ("this is feasible and optimal")
-        elif results.solver.termination_condition == TerminationCondition.infeasible:
-            print ("do something about it? or exit?")
-        else:
-             # something else is wrong
-            print ('Something is wrong')
-            print (str(results.solver))
-            sys.exit('Error')
-            
-        
+        # if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
+        #     print ("this is feasible and optimal")
+        # elif results.solver.termination_condition == TerminationCondition.infeasible:
+        #     print ("do something about it? or exit?")
+        # else:
+        #      # something else is wrong
+        #     print ('Something is wrong')
+        #     print (str(results.solver))
+        #     sys.exit('Error')
 
-    
-        print (BB_matches) 
+        #print (BB_matches) 
         
         return BB_matches
-    
-#BB_match(Setpoint,orderbook_temporary,offer_index,offer_quantity, lines, nodes, direction, offer_bus, offer_price, offer_block)
