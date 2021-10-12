@@ -1,0 +1,10 @@
+ID,Time_target,Bid,Bus,Direction,Quantity,Price,Time_stamp,Block
+1,t1,Request,n2,Down,0.1,40,30/06/2021 06.53,No
+2,t1,Request,n3,Up,0.1,41,30/06/2021 06.54,No
+3,t2,Request,n3,Down,0.1,42,30/06/2021 06.55,No
+4,t2,Request,n5,Up,0.1,43,30/06/2021 06.56,No
+5,t1,Offer,n4,Up,0.1,33,30/06/2021 06.57,No
+8,t1,Offer,n3,Up,0.1,30,30/06/2021 06.58,11
+9,t2,Offer,n3,Down,0.1,30,30/06/2021 06.58,11
+7,t2,Offer,n2,Down,0.1,31,30/06/2021 06.59,No
+6,t1,Offer,n5,Up,0.1,32,30/06/2021 07.00,No
