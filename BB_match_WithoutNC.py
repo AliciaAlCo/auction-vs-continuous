@@ -2,7 +2,7 @@
 """
 Created on Sat Aug 28 13:23:55 2021
 
-@author: Usuario
+@author: aalarcon
 """
 
 from pyomo.opt import SolverStatus, TerminationCondition
