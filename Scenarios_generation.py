@@ -18,7 +18,7 @@ start_time = time.time()
 
 results = pd.DataFrame(columns = ['Social_Welfare_BB_NC','Volume_BB_NC','Time_BB_NC','Social_Welfare_SB_NC','Volume_SB_NC','Time_SB_NC','Social_Welfare_BB_WNC','Volume_BB_WNC','Time_BB_WNC','Social_Welfare_SB_WNC','Volume_SB_WNC','Time_SB_WNC','Social_Welfare_BB_NC_A','Volume_BB_NC_A','Time_BB_NC_A','Social_Welfare_SB_NC_A','Volume_SB_NC_A','Time_SB_NC_A','Social_Welfare_BB_WNC_A','Volume_BB_WNC_A','Time_BB_WNC_A','Social_Welfare_SB_WNC_A','Volume_SB_WNC_A','Time_SB_WNC_A'])
 
-for i in range(0,1):
+for i in range(0,100):
     # Creation of random arrival order
     all_bids_BB,all_bids_SB = arrival_creation()
      
