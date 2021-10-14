@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Aug 18 13:31:09 2020
-@author: emapr
+@author: emapr and aalarcon
 """
 
 import pandas as pd
@@ -22,21 +22,16 @@ def continuous_clearing_BB(all_bids,network_constraints):
     
     start_time = time.time()
     
-    
     #%% Case data
-    
     Setpoint_ini = pd.read_excel(open('Setpoint.xlsx', 'rb'),index_col=0)
-    
     Setpoint = pd.DataFrame(columns = ['Time_target','Setpoint_P'])
     Setpoint.set_index('Time_target',inplace=True)
-    
     setpoint = []
     for t in Setpoint_ini.index:
         setpoint = []
         for n in Setpoint_ini.columns:
             setpoint.append(Setpoint_ini.at[t,n])
         Setpoint.at[t,'Setpoint_P'] = setpoint
-    
     
     # Initial Social Welfare and Flexibility Procurement Cost
     Social_Welfare = 0
@@ -59,7 +54,7 @@ def continuous_clearing_BB(all_bids,network_constraints):
     
     #%% Function to match a new offer
     def continuous_clearing(new_bid, orderbook_request, orderbook_offer, orderbook_temporary, Setpoint, Social_Welfare, Flex_procurement):
-        
+   
         matches = pd.DataFrame(columns = ['Offer','Offer Bus','Offer Price','Offer Block','Request','Request Bus','Request Price','Direction','Quantity','Matching Price','Time_target','Social Welfare'])
     
     #%% Function to match an offer
@@ -94,7 +89,6 @@ def continuous_clearing_BB(all_bids,network_constraints):
                     flag = 'Empty orderbook'
                     orderbook_offer.loc[offer_index]=[nodes[offer_bus],direction,offer_quantity,offer_price,time_target,offer_time_stamp,offer_block]
                     orderbook_offer.sort_values(by=['Time_target','Price','Time_stamp'], ascending=[True,True,True], inplace=True) # Sort by price and by time submission and gather by time target
-                    #print ('Empty orderbook_request')
                     return Setpoint, status, orderbook_request, orderbook_offer, orderbook_temporary,  matches, flag, Social_Welfare, Flex_procurement
                 
                 # Else, list of requests to look into
@@ -119,12 +113,10 @@ def continuous_clearing_BB(all_bids,network_constraints):
             
             if bid_nature == 'Offer':
                 if orderbook['Quantity'].sum() != orderbook_request['Quantity'].sum():
-                    #sys.exit("Orderbook has not been updated properly")
                     print ("Orderbook has not been updated properly")
      
             if bid_nature == 'Request':
                 if orderbook['Quantity'].sum() != orderbook_offer['Quantity'].sum():
-                    #sys.exit("Orderbook has not been updated properly")
                     print ("Orderbook has not been updated properly")
 
             # Check matching with all the requests (in the same direction)
@@ -144,7 +136,7 @@ def continuous_clearing_BB(all_bids,network_constraints):
                 # Check if there are bids to match with
                 if orderbook.at[ID,'Direction'] == direction and orderbook.at[ID,'Time_target'] == time_target:
                 #if orderbook.at[ID,'Direction'] == direction and orderbook.at[ID,'Time_target'] == time_target and offer_quantity != 0:
-                    #print ('---There is a possible match of {} with {}'.format(bid.name,ID))
+                    print ('---There is a possible match of {} with {}'.format(bid.name,ID))
                     
                     if bid_nature == 'Offer':
                         request_price = orderbook_request.at[ID,'Price']
@@ -155,7 +147,7 @@ def continuous_clearing_BB(all_bids,network_constraints):
                 
                     # Make sure that the prices are matching
                     if offer_price <= request_price:
-                        #print ('Prices are matching')
+                        print ('Prices are matching')
                         if bid_nature == 'Offer':
                             request_bus = nodes.index(orderbook_request.at[ID,'Bus'])
                             request_index = ID
@@ -172,7 +164,7 @@ def continuous_clearing_BB(all_bids,network_constraints):
                             
                         Quantity = min(Offered,Requested) # Initially, the maximum quantity that can be exchanged is the minimum of the quantities of the bids
                         
-                        #print ('Possible quantity exchanged: {}'.format(Quantity))
+                        print ('Possible quantity exchanged: {}'.format(Quantity))
                         
     
                                                            
@@ -181,7 +173,7 @@ def continuous_clearing_BB(all_bids,network_constraints):
                             flag = 'Temporary match'
                             status = 'Temporary match'
                             temporary = 'Yes'
-                            #print ('The offer is a block bid')
+                            print ('The offer is a block bid')
                             
                             if bid_nature == 'Offer': 
                                 orderbook_request.at[ID,'Temporary'] = 'Yes' # Mark the request as temporary matched
@@ -214,14 +206,14 @@ def continuous_clearing_BB(all_bids,network_constraints):
                             for i in orderbook_temporary.index:
                                 if orderbook_temporary.at[i,'Offer'] == offer_index:
                                     offer1_sum += orderbook_temporary.at[i,'Quantity']
-                                    #print ('BB part {} is temporary matched with {}'.format(offer_index,orderbook_temporary.at[i,'Request']))
+                                    print ('BB part {} is temporary matched with {}'.format(offer_index,orderbook_temporary.at[i,'Request']))
                                 elif orderbook_temporary.at[i,'Offer Block'] == offer_block and orderbook_temporary.at[i,'Offer'] != offer_index:
                                     offer_index2 = orderbook_temporary.at[i,'Offer']
                                     offer2_sum += orderbook_temporary.at[i,'Quantity']
-                                    #print ('BB part {} is temporary matched with {}'.format(orderbook_temporary.at[i,'Offer'],orderbook_temporary.at[i,'Request']))
+                                    print ('BB part {} is temporary matched with {}'.format(orderbook_temporary.at[i,'Offer'],orderbook_temporary.at[i,'Request']))
                             
                             if Offered <= offer1_sum: # If the quantity temporary matched is higher or equal to the offer_quantity this part of the BB could be matched
-                                #print ('BB part {} could be completely matched'.format(offer_index))
+                                print ('BB part {} could be completely matched'.format(offer_index))
     
                                 if offer_block not in orderbook_temporary.iloc[:,2].values: #If the other part has not been considered yet, the whole match can't happen
                                     print ('BB part {} is NOT temporary matched'.format(orderbook_temporary.at[i,'Offer']))
@@ -230,15 +222,13 @@ def continuous_clearing_BB(all_bids,network_constraints):
                                     i1 = 0
                                     for i in orderbook_offer[orderbook_offer['Block']==offer_block].index: # Look for the offers that are part of the BB
                                         i1 = 1
-                                        ##print (i)
                                         if i in orderbook_temporary['Offer'].values:
                                             if i != offer_index: # Localize the other part of the BB in the orderbook                
                                                 if orderbook_offer.at[i,'Quantity'] <= offer2_sum:
-                                                    #print ('BB part {} could also be completely matched'.format(i))
-                                                    
+                                                    print ('BB part {} could also be completely matched'.format(i))
                                                     # 1. Match the ongoing part of the BB
                                                     # BB_match should return the matches that are considered for the BB
-                                                    #print ('Calling BB_match for the first time, with {}'.format(offer_index))
+                                                    print ('Calling BB_match for the first time, with {}'.format(offer_index))
                                                     if network_constraints == 1:
                                                         BB_matches1 = BB_match(Setpoint_t, orderbook_temporary, offer_index, Offered, lines, nodes, direction, offer_bus, offer_price, offer_block)  
                                                     else:
@@ -246,11 +236,10 @@ def continuous_clearing_BB(all_bids,network_constraints):
     
                                                     if BB_matches1.empty:
                                                         print ('There is no feasible solution with the current temporary matches')
-                                                        # COMPLETE IT
-                                                        
+ 
                                                     else:
                                                         # 2. Match the other part of the BB
-                                                        #print ('Calling BB_match for the second time, with {}'.format(offer_index2))
+                                                        print ('Calling BB_match for the second time, with {}'.format(offer_index2))
                                                         time_target2 = orderbook_offer.at[offer_index2,'Time_target']
                                                         Setpoint_t2 = Setpoint.at[time_target2,'Setpoint_P']
                                                         offer_quantity2 = orderbook_offer.at[offer_index2,'Quantity']
@@ -261,12 +250,11 @@ def continuous_clearing_BB(all_bids,network_constraints):
                                                         else:
                                                             BB_matches2 = BB_match_WithoutNC(Setpoint_t2, orderbook_temporary, offer_index2, offer_quantity2, lines, nodes, direction2, offer_bus, offer_price2, offer_block) 
     
-                                                            
                                                         if BB_matches2.empty:
                                                             print ('There is no feasible solution with the current temporary matches')
                                                         
                                                         else:
-                                                            #print ('The whole block bid has been matched')
+                                                            print ('The whole block bid has been matched')
                                                             status = 'Match'
                                                             flag = 'Match'
                                                             # 3. Add the BB match to matches
@@ -290,7 +278,6 @@ def continuous_clearing_BB(all_bids,network_constraints):
                                                                 # 4.3 Update the request in the orderbook_request
                                                             for m in BB_matches.index:
                                                                 req = BB_matches.at[m,'Request']
-                                                                #print (req)
                                                                 req_quantity = BB_matches.at[m,'Quantity']
                                                                 request_quantity = req_quantity
                                                                 if req in orderbook_request.index.values: # If it is an old request, update/remove it
@@ -325,39 +312,30 @@ def continuous_clearing_BB(all_bids,network_constraints):
                                                                     Delta[request_bus_1]+=BB_matches.at[m,'Quantity']        
                                                                 
                                                                 # Modify the Setpoint and update the status marker
-                                                                #print ('Setpoint modification')
+                                                                print ('Setpoint modification')
                                                                 Setpoint_t = Setpoint.at[time_target_1,'Setpoint_P']
                                                                 Setpoint.at[time_target_1,'Setpoint_P'] = list(map(add,Setpoint_t,Delta))
-                                                                # #print (Setpoint.at[time_target_1,'Setpoint_P'])
                                                                 Setpoint_t = Setpoint.at[BB_matches.at[m,'Time_target'],'Setpoint_P']
                                                                 status = 'match'
-                                                                
-                                                                
+
                                                                 if bid_nature == 'Offer':
                                                                     orderbook = orderbook_request
                                                                     offer_quantity = 0
-                                                                    #return Setpoint, status, orderbook_request, orderbook_offer, orderbook_temporary,  matches, flag, Social_Welfare, Flex_procurement
-    
+
                                                                 else:
                                                                     orderbook = orderbook_offer
-      
                                                 else:
                                                     print ('BUT BB part {} could NOT be completely matched'.format(i))
-    
-                                        # else:
-                                        #     #print ('BUT the rest of the BB is not temporary matched')
                                             
                                     if i1 == 0: # If the other part has not been considered yet
                                         print ('2.BUT the rest of the BB is not temporary matched')
                                         
                             else:
-                                print ('BUT it could not be completely matched')
-                                # #print (orderbook_offer, orderbook_request)
-                                                
+                                print ('BUT it could not be completely matched')                                          
                                 
                         # If the bid it is not a BB
                         else:
-                            #print ('No BB involved')
+                            print ('No BB involved')
                             
                             # 1. NETWORK CHECK
                             if network_constraints == 1:
@@ -366,8 +344,8 @@ def continuous_clearing_BB(all_bids,network_constraints):
                                     Quantity = PTDF_check(Setpoint_t,Quantity,offer_bus,request_bus,direction) # Returns the maximum quantity that can be exchanged without leading to congestions
                                                    
                             if Quantity > epsilon: # Line constraints are respected
-                                #print ('THERE IS A MATCH')
-                                #print ('Quantity exchanged',Quantity)
+                                print ('THERE IS A MATCH')
+                                print ('Quantity exchanged',Quantity)
                                 flag = 'Match'
                                 # The older bid sets the price
                                 if request_time_stamp < offer_time_stamp:
@@ -380,7 +358,6 @@ def continuous_clearing_BB(all_bids,network_constraints):
         
                                 # Calculate the corresponding changes in the Setpoint
                                 Delta = [0] * len(Setpoint_t)
-                                ##print (offer_bus,request_bus)
                                 if direction == 'Up':
                                     Delta[offer_bus]+=Quantity
                                     Delta[request_bus]-=Quantity
@@ -389,7 +366,7 @@ def continuous_clearing_BB(all_bids,network_constraints):
                                     Delta[request_bus]+=Quantity
                                     
                                 # Modify the Setpoint and update the status marker
-                                #print ('Setpoint modification')
+                                print ('Setpoint modification')
                                 Setpoint.at[time_target,'Setpoint_P'] = list(map(add,Setpoint_t,Delta))
                                 Setpoint_t = Setpoint.at[time_target,'Setpoint_P']
                                 status = 'match'
@@ -410,61 +387,57 @@ def continuous_clearing_BB(all_bids,network_constraints):
                                         print ('Request {} was temporary matched'.format(request_index))  
                                         for i in orderbook_temporary[orderbook_temporary['Request']==request_index].index: # Update all the temporary matches that involve the request
                                             if orderbook_temporary.at[i,'Quantity'] > request_quantity:
-                                                #print ('The temporary match of {} and {} must be updated. Now the quantity matched is {}'.format(request_index,orderbook_temporary.at[i,'Offer'],request_quantity))
+                                                print ('The temporary match of {} and {} must be updated. Now the quantity matched is {}'.format(request_index,orderbook_temporary.at[i,'Offer'],request_quantity))
                                                 orderbook_temporary.at[i,'Quantity'] = request_quantity
                                                 if orderbook_temporary.at[i,'Quantity'] < epsilon:
-                                                    #print ('So it is completely cancelled')
+                                                    print ('So it is completely cancelled')
                                                     orderbook_temporary = orderbook_temporary.drop([i], axis=0) # Remove the temporary match   
                                 
                                     if ID in orderbook_request.index:
                                         if orderbook_request.at[ID,'Quantity'] < epsilon: # If the request was completely matched
-                                            #print ('Request completely matched')
+                                            print ('Request completely matched')
                                             orderbook_request = orderbook_request.drop([ID], axis=0)
                                          
                                     orderbook = orderbook_request 
         
                                     if offer_quantity < epsilon: # If the offer was completely matched
-                                        #print ('Offer completely matched')
+                                        print ('Offer completely matched')
                                         flag = 'Match'
                                         status = 'Match'
                                         if bid_type == 'old': # In the case of checking the bids in the order book, the corresponding row must be dropped
                                             orderbook_offer = orderbook_offer.drop([offer_index], axis=0)
                                     
                                         return Setpoint, status, orderbook_request, orderbook_offer, orderbook_temporary,  matches, flag, Social_Welfare, Flex_procurement
-                                    
-                                    
-                                    
+
                                 elif bid_nature == 'Request':
                             
                                     request_quantity = Requested - Quantity
                                     orderbook_offer.at[ID,'Quantity'] = Offered - Quantity
-                                    #print ('Request quantity remaining',request_quantity)
+                                    print ('Request quantity remaining',request_quantity)
                                     
                                     # Check if the request was temporary matched
                                     if request_index in orderbook_temporary.iloc[:,5].values:
-                                        #print ('Request {} was temporary matched'.format(request_index))
+                                        print ('Request {} was temporary matched'.format(request_index))
                                         for i in orderbook_temporary[orderbook_temporary['Request']==request_index].index: # Update all the temporary matches that involve the request
                                             if orderbook_temporary.at[i,'Quantity'] > request_quantity:
-                                                #print ('The temporary match of {} and {} must be updated. Now the quantity matched is {}'.format(request_index,orderbook_temporary.at[i,'Offer'],request_quantity))
+                                                print ('The temporary match of {} and {} must be updated. Now the quantity matched is {}'.format(request_index,orderbook_temporary.at[i,'Offer'],request_quantity))
                                                 orderbook_temporary.at[i,'Quantity'] = request_quantity
                                                 if orderbook_temporary.at[i,'Quantity'] < epsilon:
-                                                    #print ('So it is completely cancelled')
+                                                    print ('So it is completely cancelled')
                                                     orderbook_temporary = orderbook_temporary.drop([i], axis=0) # Remove the temporary match   
                                    
                                     if orderbook_offer.at[ID,'Quantity'] < epsilon: # If the offer was completely matched
-                                        #print ('Offer completely matched')  
+                                        print ('Offer completely matched')  
                                         orderbook_offer = orderbook_offer.drop([ID], axis=0)
                                       
                                     orderbook = orderbook_offer
                                       
                                     if request_quantity < epsilon: # If the request was completely matched
-                                        #print ('Request completely matched')     
+                                        print ('Request completely matched')     
                                         return Setpoint, status, orderbook_request, orderbook_offer, orderbook_temporary,  matches, flag, Social_Welfare, Flex_procurement
-                         
-                            
                             else:
                                 flag = 'No match (congestions)'
-                                #print ('No match (congestions)')
+                                print ('No match (congestions)')
                           
                     else:
                         flag = 'No match (price)'
@@ -487,7 +460,6 @@ def continuous_clearing_BB(all_bids,network_constraints):
     #%% Check the power flows using PTDFs each time a bid is added
         
         Setpoint, status, orderbook_request, orderbook_offer, orderbook_temporary,  matches, flag, Social_Welfare, Flex_procurement = matching('new', Setpoint, new_bid, orderbook_request, orderbook_offer, orderbook_temporary,  matches, Social_Welfare, Flex_procurement)
-        #print ('Matching has finished 1')
         # If there was at least a match with an unconditional request, try again on older bids
         if status == 'match' and not orderbook_offer[(orderbook_offer.Direction == new_bid.at['Direction']) & (orderbook_offer.Time_target == new_bid.at['Time_target'])].empty:
             general_status = 'match'
@@ -500,7 +472,6 @@ def continuous_clearing_BB(all_bids,network_constraints):
                             break
                         else:
                             Setpoint, status, orderbook_request, orderbook_offer, orderbook_temporary, matches, flag_tp, Social_Welfare, Flex_procurement = matching('old',Setpoint, old_offer, orderbook_request, orderbook_offer, orderbook_temporary,  matches, Social_Welfare, Flex_procurement)
-                            #print ('Matching has finished 2 ')
                         if status == 'match':
                             general_status = 'match'
         return matches, orderbook_request, orderbook_offer, orderbook_temporary,  Setpoint, flag, Social_Welfare, Flex_procurement
@@ -524,32 +495,29 @@ def continuous_clearing_BB(all_bids,network_constraints):
     for b in all_bids.index:
         
         n+=1
-        #print ('')
-        #print('---------------- Betting round nb {} -----------------'.format(n))
-        #print ('')
-        #print('New bid: ({}, {}, {}, {}, {}, {}, {}, Block:{})'.format(b,all_bids.at[b,'Bid'],all_bids.at[b,'Bus'],all_bids.at[b,'Direction'],all_bids.at[b,'Quantity'],all_bids.at[b,'Price'],all_bids.at[b,'Time_target'],all_bids.at[b,'Block']))
+        print ('')
+        print('---------------- Betting round nb {} -----------------'.format(n))
+        print ('')
+        print('New bid: ({}, {}, {}, {}, {}, {}, {}, Block:{})'.format(b,all_bids.at[b,'Bid'],all_bids.at[b,'Bus'],all_bids.at[b,'Direction'],all_bids.at[b,'Quantity'],all_bids.at[b,'Price'],all_bids.at[b,'Time_target'],all_bids.at[b,'Block']))
         new_bid = all_bids.loc[b]
         matches, orderbook_request, orderbook_offer, orderbook_temporary,  Setpoint, flag, Social_Welfare, Flex_procurement = continuous_clearing(new_bid, orderbook_request, orderbook_offer, orderbook_temporary,  Setpoint, Social_Welfare, Flex_procurement)
-        #print ('return')
         All_Matches.append([flag,matches])
         
         if not matches.empty:
             for i in matches.index:
                 market_result = market_result.append({'Offer':matches.at[i,'Offer'],'Offer Bus':matches.at[i,'Offer Bus'],'Request Price':matches.at[i,'Request Price'],'Offer Block':matches.at[i,'Offer Block'],'Request':matches.at[i,'Request'],'Request Bus':matches.at[i,'Request Bus'],'Offer Price':matches.at[i,'Offer Price'],'Direction':matches.at[i,'Direction'],'Quantity':matches.at[i,'Quantity'],'Matching Price':matches.at[i,'Matching Price'],'Time_target':matches.at[i,'Time_target'],'Social Welfare':matches.at[i,'Social Welfare']},ignore_index=True)
-                #market_result.sort_values(by=['Time_target'],ascending=[True], inplace=True)
                 t = matches.at[i,'Time_target']
                 SocialW.at[t,'Social Welfare'] += (matches.at[i,'Request Price'] - matches.at[i,'Offer Price'])*matches.at[i,'Quantity']
-                #print (market_result)
                 
-        #print ('SOCIAL WELFARE', Social_Welfare)
-        #print ('')
-        #print ('State:',flag)
-        # #print ('REQUESTS')
-        # #print (orderbook_request.iloc[:,[1,2,3,4,6]])
-        # #print ('OFFERS')
-        # #print (orderbook_offer.iloc[:,[1,2,3,4,6]]) 
-        # #print ('TEMPORARY')
-        # #print (orderbook_temporary.iloc[:,[0,2,5,9]]) 
+        print ('SOCIAL WELFARE', Social_Welfare)
+        print ('')
+        print ('State:',flag)
+        #print ('REQUESTS')
+        #print (orderbook_request.iloc[:,[1,2,3,4,6]])
+        #print ('OFFERS')
+        #print (orderbook_offer.iloc[:,[1,2,3,4,6]]) 
+        #print ('TEMPORARY')
+        #print (orderbook_temporary.iloc[:,[0,2,5,9]]) 
         #print ('MATCH')
         #print (matches.iloc[:,[0,3,4,8]])
            
@@ -578,35 +546,9 @@ def continuous_clearing_BB(all_bids,network_constraints):
         energy_volume_up.at[t,'Energy_volume'] = vol_up
         energy_volume_down.at[t,'Energy_volume'] = vol_down
         SocWel += SocialW.at[t,'Social Welfare']
-        
-    #print (energy_volume)
-    
+
     print ('Total Social Welfare', SocWel)
     print ('Total Volume',total_volume)
-    
-    requests_accepted = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp'])
-    requests_accepted_up = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp'])
-    requests_accepted_down = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp'])
-    
-    offers_accepted = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp','Block'])
-    offers_accepted_up = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp','Block'])
-    offers_accepted_down = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp','Block'])
-    
-    volume_up = 0
-    for matches in market_result.index:
-        offer = market_result.at[matches,'Offer']
-        offers_accepted = offers_accepted.append({'Time_target':all_bids.at[offer,'Time_target'], 'Direction':all_bids.at[offer,'Direction'], 'Quantity':market_result.at[matches,'Quantity'], 'Price':all_bids.at[offer,'Price'], 'ID':offer, 'Bus':all_bids.at[offer,'Bus'], 'Time_stamp':all_bids.at[offer,'Time_stamp'], 'Block':all_bids.at[offer,'Block']},ignore_index=True)                                        
-        request = market_result.at[matches,'Request']
-        requests_accepted = requests_accepted.append({'Time_target':all_bids.at[request,'Time_target'], 'Direction':all_bids.at[request,'Direction'], 'Quantity':market_result.at[matches,'Quantity'], 'Price':all_bids.at[request,'Price'], 'ID':request, 'Bus':all_bids.at[request,'Bus'], 'Time_stamp':all_bids.at[request,'Time_stamp'], 'Block':all_bids.at[request,'Block']},ignore_index=True)
-        
-        
-        if market_result.at[matches,'Direction'] == 'Up':
-            offers_accepted_up = offers_accepted_up.append({'Time_target':all_bids.at[offer,'Time_target'], 'Direction':all_bids.at[offer,'Direction'], 'Quantity':market_result.at[matches,'Quantity'], 'Price':all_bids.at[offer,'Price'], 'ID':offer, 'Bus':all_bids.at[offer,'Bus'], 'Time_stamp':all_bids.at[offer,'Time_stamp'], 'Block':all_bids.at[offer,'Block']},ignore_index=True)                                        
-            requests_accepted_up = requests_accepted_up.append({'Time_target':all_bids.at[request,'Time_target'], 'Direction':all_bids.at[request,'Direction'], 'Quantity':market_result.at[matches,'Quantity'], 'Price':all_bids.at[request,'Price'], 'ID':request, 'Bus':all_bids.at[request,'Bus'], 'Time_stamp':all_bids.at[request,'Time_stamp'], 'Block':all_bids.at[request,'Block']},ignore_index=True)
-     
-        else:
-            offers_accepted_down = offers_accepted_down.append({'Time_target':all_bids.at[offer,'Time_target'], 'Direction':all_bids.at[offer,'Direction'], 'Quantity':market_result.at[matches,'Quantity'], 'Price':all_bids.at[offer,'Price'], 'ID':offer, 'Bus':all_bids.at[offer,'Bus'], 'Time_stamp':all_bids.at[offer,'Time_stamp'], 'Block':all_bids.at[offer,'Block']},ignore_index=True)                                        
-            requests_accepted_down = requests_accepted_down.append({'Time_target':all_bids.at[request,'Time_target'], 'Direction':all_bids.at[request,'Direction'], 'Quantity':market_result.at[matches,'Quantity'], 'Price':all_bids.at[request,'Price'], 'ID':request, 'Bus':all_bids.at[request,'Bus'], 'Time_stamp':all_bids.at[request,'Time_stamp'], 'Block':all_bids.at[request,'Block']},ignore_index=True)
     
     if network_constraints == 1:
         print ('Network constraints considered')
@@ -622,7 +564,6 @@ def continuous_clearing_BB(all_bids,network_constraints):
         print ('Block bids included')
     else:
         print ('Block bids NOT included')
-    
     
     end_time = time.time()
     total_time = end_time - start_time
