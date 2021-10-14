@@ -222,24 +222,17 @@ def auction_BB_NC(all_bids):
             m.pod_limit.add(pyo.inequality(0,m.pod[od],offers_down.at[od,'Quantity']))  
         
         return m
-    
-    
-    
+
     m = dc_opf()
     
     #choose the solver
     opt = pyo.SolverFactory('gurobi')
-    #opt.options["CPXchgprobtype"]="CPXPROB_FIXEDMILP"
     results = opt.solve(m)
     #m.display()
     m.dual.display()
-    
-    
-    
+
     for K in np.unique(offers_BB['Block']):
         AR_results.loc[K] = m.AR[K].value
-    #print (AR_results)
-    
     
     #%% solutions
     
@@ -269,8 +262,8 @@ def auction_BB_NC(all_bids):
     
     
         for T in Setpoint.index:
-            #print ('----Time period----',T)
-            #print ('Offers Up')
+            print ('----Time period----',T)
+            print ('Offers Up')
             energy_volume_up_offers = 0
             energy_volume_down_offers = 0
             energy_volume_up_req = 0
@@ -291,7 +284,7 @@ def auction_BB_NC(all_bids):
                     K = offers_BB_up.at[BBU,'Block']
                     if round(m.AR[K].value*offers_BB_up.at[BBU,'Quantity'],2) > 0.00:
                         market_result = market_result.append({'Time_target':offers_BB_up.at[BBU,'Time_target'],'ID':BBU,'Bid':'Offer','Bus':offers_BB_up.at[BBU,'Bus'],'Direction':'Up','Quantity':round(m.AR[K].value*offers_BB_up.at[BBU,'Quantity'],2),'Price':offers_BB_up.at[BBU,'Price'],'Time_stamp':offers_BB_up.at[BBU,'Time_stamp'],'Block':K},ignore_index=True)
-                        #print (BBU,round(m.AR[K].value*offers_BB_up.at[BBU,'Quantity'],2),offers_BB_up.at[BBU,'Price'],offers_BB_up.at[BBU,'Time_target'],'BB')
+                        print (BBU,round(m.AR[K].value*offers_BB_up.at[BBU,'Quantity'],2),offers_BB_up.at[BBU,'Price'],offers_BB_up.at[BBU,'Time_target'],'BB')
                         energy_volume_up_offers += m.AR[K].value*offers_BB_up.at[BBU,'Quantity']
                     if m.AR[K].value*offers_BB_up.at[BBU,'Quantity'] > epsilon:
                         bids_in = bids_in.append({'Time_target':offers_BB_up.at[BBU,'Time_target'],'ID':BBU,'Bid':'Offer','Bus':offers_BB_up.at[BBU,'Bus'],'Direction':'Up','Quantity':offers_BB_up.at[BBU,'Quantity'],'Price':offers_BB_up.at[BBU,'Price'],'Time_stamp':offers_BB_up.at[BBU,'Time_stamp'],'Block':K},ignore_index=True)
@@ -299,13 +292,13 @@ def auction_BB_NC(all_bids):
                         bids_out = bids_out.append({'Time_target':offers_BB_up.at[BBU,'Time_target'],'ID':BBU,'Bid':'Offer','Bus':offers_BB_up.at[BBU,'Bus'],'Direction':'Up','Quantity':offers_BB_up.at[BBU,'Quantity'],'Price':offers_BB_up.at[BBU,'Price'],'Time_stamp':offers_BB_up.at[BBU,'Time_stamp'],'Block':K},ignore_index=True)
                        
                         
-            #print ('Offers Down')
+            print ('Offers Down')
             for OD in offers_down.index:
                 pod = m.pod[OD].value
                 if offers_down.at[OD,'Time_target'] == T:
                     if m.pod[OD].value > epsilon:
                         market_result = market_result.append({'Time_target':offers_down.at[OD,'Time_target'],'ID':OD,'Bid':'Offer','Bus':offers_down.at[OD,'Bus'],'Direction':'Down','Quantity':pod,'Price':offers_down.at[OD,'Price'],'Time_stamp':offers_down.at[OD,'Time_stamp'],'Block':'No'},ignore_index=True)
-                        #print (OD,pod,offers_down.at[OD,'Price'],offers_down.at[OD,'Time_target'])
+                        print (OD,pod,offers_down.at[OD,'Price'],offers_down.at[OD,'Time_target'])
                         energy_volume_down_offers += m.pod[OD].value
                         bids_in = bids_in.append({'Time_target':offers_down.at[OD,'Time_target'],'ID':OD,'Bid':'Offer','Bus':offers_down.at[OD,'Bus'],'Direction':'Down','Quantity':offers_down.at[OD,'Quantity'],'Price':offers_down.at[OD,'Price'],'Time_stamp':offers_down.at[OD,'Time_stamp'],'Block':'No'},ignore_index=True)                    
                     else:
@@ -319,43 +312,38 @@ def auction_BB_NC(all_bids):
                     if m.AR[K].value*offers_BB_down.at[BBD,'Quantity'] > epsilon:
                         bids_in = bids_in.append({'Time_target':offers_BB_down.at[BBD,'Time_target'],'ID':BBD,'Bid':'Offer','Bus':offers_BB_down.at[BBD,'Bus'],'Direction':'Down','Quantity':offers_BB_down.at[BBD,'Quantity'],'Price':offers_BB_down.at[BBD,'Price'],'Time_stamp':offers_BB_down.at[BBD,'Time_stamp'],'Block':K},ignore_index=True)             
                         market_result = market_result.append({'Time_target':offers_BB_down.at[BBD,'Time_target'],'ID':BBD,'Bid':'Offer','Bus':offers_BB_down.at[BBD,'Bus'],'Direction':'Down','Quantity':pbbd,'Price':offers_BB_down.at[BBD,'Price'],'Time_stamp':offers_BB_down.at[BBD,'Time_stamp'],'Block':K},ignore_index=True)             
-                        #print (BBD,pbbd,offers_BB_down.at[BBD,'Price'],offers_BB_down.at[BBD,'Time_target'],'BB')
+                        print (BBD,pbbd,offers_BB_down.at[BBD,'Price'],offers_BB_down.at[BBD,'Time_target'],'BB')
                         energy_volume_down_offers += m.AR[K].value*offers_BB_down.at[BBD,'Quantity']
                     else:
                         bids_out = bids_out.append({'Time_target':offers_BB_down.at[BBD,'Time_target'],'ID':BBD,'Bid':'Offer','Bus':offers_BB_down.at[BBD,'Bus'],'Direction':'Down','Quantity':offers_BB_down.at[BBD,'Quantity'],'Price':offers_BB_down.at[BBD,'Price'],'Time_stamp':offers_BB_down.at[BBD,'Time_stamp'],'Block':K},ignore_index=True)             
       
                     
-            #print ('Requests Up')
+            print ('Requests Up')
             for RU in requests_up.index:
                 pru = m.pru[RU].value
                 if requests_up.at[RU,'Time_target'] == T:
                     if m.pru[RU].value > epsilon:
                         market_result = market_result.append({'Time_target':requests_up.at[RU,'Time_target'],'ID':RU,'Bid':'Request','Bus':requests_up.at[RU,'Bus'],'Direction':'Up','Quantity':pru,'Price':requests_up.at[RU,'Price'],'Time_stamp':requests_up.at[RU,'Time_stamp'],'Block':'No'},ignore_index=True)                
-                        #print (RU,pru,requests_up.at[RU,'Price'],requests_up.at[RU,'Time_target'])
+                        print (RU,pru,requests_up.at[RU,'Price'],requests_up.at[RU,'Time_target'])
                         energy_volume_up_req += m.pru[RU].value
                         bids_in = bids_in.append({'Time_target':requests_up.at[RU,'Time_target'],'ID':RU,'Bid':'Request','Bus':requests_up.at[RU,'Bus'],'Direction':'Up','Quantity':requests_up.at[RU,'Quantity'],'Price':requests_up.at[RU,'Price'],'Time_stamp':requests_up.at[RU,'Time_stamp'],'Block':'No'},ignore_index=True)                
                     else:
                         bids_out = bids_out.append({'Time_target':requests_up.at[RU,'Time_target'],'ID':RU,'Bid':'Request','Bus':requests_up.at[RU,'Bus'],'Direction':'Up','Quantity':requests_up.at[RU,'Quantity'],'Price':requests_up.at[RU,'Price'],'Time_stamp':requests_up.at[RU,'Time_stamp'],'Block':'No'},ignore_index=True)                
                        
                     
-            #print ('Requests Down')
+            print ('Requests Down')
             for RD in requests_down.index:
                 prd = m.prd[RD].value
                 if requests_down.at[RD,'Time_target'] == T:
                     if m.prd[RD].value > epsilon:
                         market_result = market_result.append({'Time_target':requests_down.at[RD,'Time_target'],'ID':RD,'Bid':'Request','Bus':requests_down.at[RD,'Bus'],'Direction':'Down','Quantity':prd,'Price':requests_down.at[RD,'Price'],'Time_stamp':requests_down.at[RD,'Time_stamp'],'Block':'No'},ignore_index=True)                
-                        #print (RD,prd,requests_down.at[RD,'Price'],requests_down.at[RD,'Time_target'])
+                        print (RD,prd,requests_down.at[RD,'Price'],requests_down.at[RD,'Time_target'])
                         energy_volume_down_req += m.prd[RD].value
                         bids_in = bids_in.append({'Time_target':requests_down.at[RD,'Time_target'],'ID':RD,'Bid':'Request','Bus':requests_down.at[RD,'Bus'],'Direction':'Down','Quantity':requests_down.at[RD,'Quantity'],'Price':requests_down.at[RD,'Price'],'Time_stamp':requests_down.at[RD,'Time_stamp'],'Block':'No'},ignore_index=True)                
                     else:
                         bids_out = bids_out.append({'Time_target':requests_down.at[RD,'Time_target'],'ID':RD,'Bid':'Request','Bus':requests_down.at[RD,'Bus'],'Direction':'Down','Quantity':requests_down.at[RD,'Quantity'],'Price':requests_down.at[RD,'Price'],'Time_stamp':requests_down.at[RD,'Time_stamp'],'Block':'No'},ignore_index=True)                
                     
             # Indicators:
-            # print ('INDICATORS')
-            # print ('   Enegy volume up offers = ',round(energy_volume_up_offers,4))
-            # print ('   Enegy volume down offers= ',round(energy_volume_down_offers,4))
-            # print ('   Enegy volume up req = ',round(energy_volume_up_req,4))
-            # print ('   Enegy volume down req= ',round(energy_volume_down_req,4))
             energy_volume_down_total += energy_volume_down_offers + energy_volume_down_req
             energy_volume_up_total += energy_volume_up_offers + energy_volume_up_req
             energy_volume_up.at[T,'Energy_volume'] = energy_volume_up_offers
@@ -367,9 +355,7 @@ def auction_BB_NC(all_bids):
             - sum(m.pru[RU].value*requests_up.at[RU,'Price'] for RU in m.RU if requests_up.at[RU,'Time_target'] == T) 
             - sum(m.prd[RD].value*requests_down.at[RD,'Price'] for RD in m.RD if requests_down.at[RD,'Time_target'] == T))
             SocialW.at[T,'Social Welfare'] = Social_Welfare
-    
-            
-            # print ('   Social welfare = ',Social_Welfare)
+
             social_welfare_total += Social_Welfare
             
             # Line flow calculations:
@@ -381,86 +367,10 @@ def auction_BB_NC(all_bids):
         print ('Total Social Welfare',round(social_welfare_total,4))
         energy_volume = (energy_volume_up_total+energy_volume_down_total)/2
         print ('Total energy volume',round((energy_volume_up_total+energy_volume_down_total)/2,2)) 
-        
-        market_result.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,True], inplace=True) # Sort by  ascending price      
-    
-        
-        
-        # BEST COMBINATION 
-        for i in bids_out.index:
-            if bids_out.at[i,'Bid']=='Request':
-                req_out = req_out.append({'Bid':'Request','Time_target':bids_out.at[i,'Time_target'], 'Direction':bids_out.at[i,'Direction'], 'Quantity':bids_out.at[i,'Quantity'], 'Price':bids_out.at[i,'Price'], 'ID':bids_out.at[i,'ID'], 'Bus':bids_out.at[i,'Bus'], 'Time_stamp':bids_out.at[i,'Time_stamp'], 'Block':bids_out.at[i,'Block']},ignore_index=True)
-    
-            else:
-                off_out = off_out.append({'Bid':'Offer','Time_target':bids_out.at[i,'Time_target'], 'Direction':bids_out.at[i,'Direction'], 'Quantity':bids_out.at[i,'Quantity'], 'Price':bids_out.at[i,'Price'], 'ID':bids_out.at[i,'ID'], 'Bus':bids_out.at[i,'Bus'], 'Time_stamp':bids_out.at[i,'Time_stamp'], 'Block':bids_out.at[i,'Block']},ignore_index=True)
-    
-        req_out.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,False], inplace=True) # Sort by descending price   
-        off_out.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,True], inplace=True) # Sort by  ascending price      
-    
-        bids_out.sort_values(by=['Bid','Time_target','Price'], ascending=[False,True,True], inplace=True) # Sort by price and by time submission and gather by time target     
-    
-        for i in bids_in.index:
-            if bids_in.at[i,'Bid']=='Request':
-                req_in = req_in.append({'Bid':'Request','Time_target':bids_in.at[i,'Time_target'], 'Direction':bids_in.at[i,'Direction'], 'Quantity':bids_in.at[i,'Quantity'], 'Price':bids_in.at[i,'Price'], 'ID':bids_in.at[i,'ID'], 'Bus':bids_in.at[i,'Bus'], 'Time_stamp':bids_in.at[i,'Time_stamp'], 'Block':bids_in.at[i,'Block']},ignore_index=True)
-            else:
-                off_in = off_in.append({'Bid':'Offer','Time_target':bids_in.at[i,'Time_target'], 'Direction':bids_in.at[i,'Direction'], 'Quantity':bids_in.at[i,'Quantity'], 'Price':bids_in.at[i,'Price'], 'ID':bids_in.at[i,'ID'], 'Bus':bids_in.at[i,'Bus'], 'Time_stamp':bids_in.at[i,'Time_stamp'], 'Block':bids_in.at[i,'Block']},ignore_index=True)
-    
-        req_in.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,False], inplace=True) # Sort by descending price   
-        off_in.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,True], inplace=True) # Sort by ascending price   
-        
-        best_bids = [req_in,off_in,req_out,off_out]
-        best_bids = pd.concat(best_bids) 
-        
-        #   WORST COMBINATION 
-        req_out.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,True], inplace=True) # Sort by ascending price   
-        off_out.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,False], inplace=True) # Sort by descending price      
-        req_in.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,True], inplace=True) # Sort by ascending price   
-        off_in.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,False], inplace=True) # Sort by descending price   
-        
-        worst_bids = [req_out,off_out,req_in,off_in]
-        worst_bids = pd.concat(worst_bids) 
-    
-    # SORT MARKET RESULTS
-    requests_accepted = pd.DataFrame(columns = ['Bid','Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp'])
-    requests_accepted_up = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp'])
-    requests_accepted_down = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp'])
-    
-    offers_accepted = pd.DataFrame(columns = ['Bid','Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp','Block'])
-    offers_accepted_up = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp','Block'])
-    offers_accepted_down = pd.DataFrame(columns = ['Time_target','Direction','Quantity','Price','ID','Bus','Time_stamp','Block'])
-    
-    # new_setpoint = pd.read_excel(open('Setpoint_nodes.xlsx', 'rb'),sheet_name='Nodes33_infeasible',index_col=0) # Baseline injections at each nodes (negative for retrieval)
-    
-    # for bids in market_result.index:
-    #     if market_result.at[bids,'Bid'] == 'Offer':
-    #         offers_accepted = offers_accepted.append({'Bid':'Offer','Time_target':market_result.at[bids,'Time_target'], 'Direction':market_result.at[bids,'Direction'], 'Quantity':market_result.at[bids,'Quantity'], 'Price':market_result.at[bids,'Price'], 'ID':market_result.at[bids,'ID'], 'Bus':market_result.at[bids,'Bus'], 'Time_stamp':market_result.at[bids,'Time_stamp'], 'Block':market_result.at[bids,'Block']},ignore_index=True)                                        
-    #         if market_result.at[bids,'Direction'] == 'Up':
-    #             new_setpoint.at[market_result.at[bids,'Time_target'],market_result.at[bids,'Bus']] += market_result.at[bids,'Quantity']
-    #         if market_result.at[bids,'Direction'] == 'Down':
-    #             new_setpoint.at[market_result.at[bids,'Time_target'],market_result.at[bids,'Bus']] -= market_result.at[bids,'Quantity']
-    #     else:
-    #         requests_accepted = requests_accepted.append({'Bid':'Request','Time_target':market_result.at[bids,'Time_target'], 'Direction':market_result.at[bids,'Direction'], 'Quantity':market_result.at[bids,'Quantity'], 'Price':market_result.at[bids,'Price'], 'ID':market_result.at[bids,'ID'], 'Bus':market_result.at[bids,'Bus'], 'Time_stamp':market_result.at[bids,'Time_stamp'], 'Block':market_result.at[bids,'Block']},ignore_index=True)
-    
-    # requests_accepted.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,False], inplace=True) # Sort by price and by time submission and gather by time target     
-    # offers_accepted.sort_values(by=['Time_target','Direction','Price'], ascending=[True,True,True], inplace=True) # Sort by price and by time submission and gather by time target     
-    # market_result = [requests_accepted,offers_accepted]
-    # market_result = pd.concat(market_result)
-    
-       
-    #%%
-    # if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
-    #      print ("this is feasible and optimal")
-    # elif results.solver.termination_condition == TerminationCondition.infeasible:
-    #      print ("do something about it? or exit?")
-    # else:
-    #      # something else is wrong
-    #      print (str(results.solver))
     
     end_time = time.time()
     total_time = end_time - start_time
     print("Time: ", total_time)
 
     return (social_welfare_total,energy_volume,total_time)
-
-#auction_BB_NC()
 
